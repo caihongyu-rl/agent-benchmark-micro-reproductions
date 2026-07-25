@@ -1,0 +1,21 @@
+query_id,domain,text
+cal_hr_01,hr_leave,Where do I submit a request for unpaid leave?
+cal_hr_02,hr_leave,When does my annual leave allowance renew?
+cal_hr_03,hr_leave,Can I take sick leave to care for a family member?
+cal_hr_04,hr_leave,How can I update my preferred name in the HR portal?
+cal_hr_05,hr_leave,What documents are required when applying for parental leave?
+cal_it_01,it_support,Where can I change the password for my work email?
+cal_it_02,it_support,What should I check when the corporate VPN disconnects repeatedly?
+cal_it_03,it_support,How do I replace a lost multi-factor authentication device?
+cal_it_04,it_support,Why am I receiving a permission denied message on the intranet?
+cal_it_05,it_support,How can I register a new laptop for company network access?
+cal_exp_01,expense_reimbursement,Can I submit several business expenses in one report?
+cal_exp_02,expense_reimbursement,When will an approved expense be paid?
+cal_exp_03,expense_reimbursement,Are parking fees covered during business travel?
+cal_exp_04,expense_reimbursement,How do I attach a digital receipt to an expense claim?
+cal_exp_05,expense_reimbursement,What happens when my reimbursement request is rejected?
+cal_proc_01,internal_procedures,Where can I read the office visitor policy?
+cal_proc_02,internal_procedures,How do I request a building access card?
+cal_proc_03,internal_procedures,What is the procedure for reserving shared equipment?
+cal_proc_04,internal_procedures,Where should I submit feedback about an internal process?
+cal_proc_05,internal_procedures,How can I enroll in the mandatory compliance training?

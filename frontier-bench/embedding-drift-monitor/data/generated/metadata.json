@@ -1,0 +1,9 @@
+{
+  "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "reference_count": 40,
+  "calibration_count": 20,
+  "stream_window_count": 9,
+  "stream_window_size": 10,
+  "injected_zero_count": 1
+}
