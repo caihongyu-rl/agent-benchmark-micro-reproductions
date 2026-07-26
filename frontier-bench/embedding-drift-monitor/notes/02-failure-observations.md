@@ -377,3 +377,96 @@ into one window score.
 
 Calibration, threshold selection, debouncing, and final alert behavior have not
 yet been implemented.
+
+## Observation 5: Calibration Uses the Mean as the Threshold
+
+### Simplified Calibration Contract
+
+In this educational reproduction, an alert threshold is derived from held-out
+normal window scores.
+
+The simplified contract uses the requested quantile of the calibration-score
+distribution. With the default argument, this is the 0.95 quantile.
+
+This is our educational calibration design, not an official benchmark formula.
+
+### Broken Implementation
+
+The implementation intentionally returns the arithmetic mean and ignores the
+`quantile` argument:
+
+```python
+def calibrate_threshold(
+    calibration_scores: np.ndarray,
+    quantile: float = 0.95,
+) -> float:
+    """Return an alert threshold from held-out normal scores."""
+
+    return float(np.mean(calibration_scores))
+```
+
+The mean represents the center of the normal-score distribution rather than
+its intended upper boundary.
+
+### Diagnostic Experiment
+
+The held-out normal scores were:
+
+```text
+[0.10, 0.12, 0.14, 0.16, 0.30]
+```
+
+The observed mean threshold was:
+
+```text
+0.164
+```
+
+Using NumPy's default quantile calculation, the expected 0.95 quantile was:
+
+```text
+0.27199999999999996
+```
+
+A high but normal score of `0.25` produced different decisions:
+
+```text
+0.25 > observed mean threshold: True
+0.25 > expected quantile threshold: False
+```
+
+The broken threshold therefore classifies this normal diagnostic score as
+shifted.
+
+### Downstream Risk
+
+A threshold near the center of the normal-score distribution may produce false
+alerts for ordinary windows whose scores are above the mean.
+
+This error can then propagate into the debouncing state, where repeated false
+window classifications may eventually activate an alert.
+
+Debouncing has not yet been implemented, so that propagation is currently a
+design inference rather than a directly observed result.
+
+### Verifier Implication
+
+A weak verifier that checks only whether the threshold is finite and falls
+inside the calibration-score range could accept the mean-based implementation.
+
+The verifier must distinguish the requested quantile from plausible alternatives
+such as the mean, median, maximum, or a hard-coded constant.
+
+For small calibration samples, the quantile convention must also be defined
+consistently. Numerical comparisons should allow ordinary floating-point
+tolerance rather than require an exact decimal representation.
+
+This does not yet define the final Verifier V0. It records one observed system
+failure and potential verifier blind spots.
+
+### Current Scope
+
+This observation concerns threshold calibration from an already valid array of
+normal window scores.
+
+Debouncing and final alert behavior have not yet been implemented.
