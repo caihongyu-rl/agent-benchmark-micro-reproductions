@@ -182,3 +182,103 @@ embeddings.
 
 Pairwise distance, window scoring, calibration, thresholds, debouncing, and
 final alert behavior have not yet been implemented.
+
+## Observation 3: Pairwise Distance Matrix Is Transposed
+
+### Component Contract
+
+In this simplified reproduction, `pairwise_cosine_distances(current, reference)`
+receives two matrices of L2-normalized embeddings.
+
+If the input shapes are:
+
+```text
+current.shape = (n_current, dimension)
+reference.shape = (n_reference, dimension)
+```
+
+the required output shape is:
+
+```text
+(n_current, n_reference)
+```
+
+Each output row represents one current embedding, and each output column
+represents one reference embedding.
+
+### Broken Implementation
+
+The implementation correctly calculates the pairwise cosine-distance values,
+but intentionally transposes the result:
+
+```python
+def pairwise_cosine_distances(
+    current: np.ndarray,
+    reference: np.ndarray,
+) -> np.ndarray:
+    """Return pairwise cosine distances to the reference embeddings."""
+
+    similarities = current @ reference.T
+    distances = 1.0 - similarities
+    return distances.T
+```
+
+### Diagnostic Experiment
+
+The input shapes were:
+
+```text
+current shape: (2, 2)
+reference shape: (3, 2)
+```
+
+The observed output was:
+
+```text
+distance shape: (3, 2)
+
+[[0. 1.]
+ [1. 0.]
+ [2. 1.]]
+```
+
+The component contract instead requires an output shape of `(2, 3)`:
+
+```text
+[[0. 1. 2.]
+ [1. 0. 1.]]
+```
+
+The individual distance values are present, but the meanings of the two matrix
+axes have been reversed.
+
+### Downstream Risk
+
+A downstream scoring function may assume that each row represents one current
+embedding and reduce each row to its nearest reference distance.
+
+With the transposed matrix, the same operation instead processes one row per
+reference embedding. This can change the resulting window score even though the
+individual pairwise values were calculated correctly.
+
+### Verifier Implication
+
+A weak verifier using equal-sized current and reference sets may fail to expose
+this error because both the correct and transposed outputs have the same shape.
+
+If the test matrix is also symmetric, transposition does not change its visible
+values.
+
+Using different numbers of current and reference embeddings produces a
+non-square output and makes the two axes distinguishable.
+
+This does not yet define the final Verifier V0. It records one observed system
+failure and one potential verifier blind spot.
+
+### Current Scope
+
+This observation concerns only the shape and axis meaning of the pairwise
+distance matrix.
+
+Window scoring, calibration, thresholds, debouncing, and final alert behavior
+have not yet been implemented.
