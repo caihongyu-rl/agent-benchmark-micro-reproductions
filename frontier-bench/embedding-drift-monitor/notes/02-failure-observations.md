@@ -282,3 +282,98 @@ distance matrix.
 
 Window scoring, calibration, thresholds, debouncing, and final alert behavior
 have not yet been implemented.
+
+## Observation 4: Window Score Uses the Global Mean
+
+### Simplified Scoring Contract
+
+In this educational reproduction, the window drift score is defined as the
+mean nearest-reference distance.
+
+For each current embedding, the scoring function should first select its
+smallest distance to any reference embedding. It should then average those
+nearest-reference distances across the current window.
+
+This is our simplified scoring design, not an official benchmark formula.
+
+### Broken Implementation
+
+The implementation intentionally averages every value in the pairwise distance
+matrix:
+
+```python
+def window_drift_score(distances: np.ndarray) -> float:
+    """Return the mean nearest-reference distance for a current window."""
+
+    return float(np.mean(distances))
+```
+
+This includes distances to reference embeddings that are not the nearest match
+for a current embedding.
+
+### Diagnostic Experiment
+
+The contract-valid distance matrix was:
+
+```text
+[[0.1 0.9 1.2]
+ [0.2 0.8 1.1]]
+```
+
+The nearest reference distance for each current embedding was:
+
+```text
+[0.1 0.2]
+```
+
+The observed score from the broken implementation was:
+
+```text
+0.7166666666666668
+```
+
+The expected mean nearest-reference score was:
+
+```text
+0.15000000000000002
+```
+
+Even though both current embeddings have a close reference match, the global
+mean is increased by the distances to unrelated reference embeddings.
+
+### Downstream Risk
+
+A falsely elevated window score can make normal traffic appear shifted.
+
+The same scoring mistake would also affect calibration scores, so it may distort
+both the normal-score distribution and the threshold derived from that
+distribution.
+
+The final effect depends on the later calibration and threshold design, which
+has not yet been implemented.
+
+### Verifier Implication
+
+A weak verifier that checks only whether the score is a finite scalar could
+accept this implementation.
+
+A test must distinguish the required row-wise nearest-reference aggregation
+from plausible alternatives such as:
+
+- the global mean of all distances;
+- the maximum distance;
+- the nearest distance across the entire matrix.
+
+The verifier should check scoring behavior rather than require a particular
+NumPy implementation.
+
+This does not yet define the final Verifier V0. It records one observed system
+failure and several plausible shortcut surfaces.
+
+### Current Scope
+
+This observation concerns only aggregation of a valid pairwise distance matrix
+into one window score.
+
+Calibration, threshold selection, debouncing, and final alert behavior have not
+yet been implemented.
